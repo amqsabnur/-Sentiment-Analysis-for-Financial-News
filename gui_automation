@@ -1,0 +1,130 @@
+import os
+import cv2
+from gui_automation import GuiAuto
+from time import sleep
+import psutil
+import pyautogui
+from ib_creds import user_name, password
+import subprocess
+
+def is_process_running(process_name):
+    for process in psutil.process_iter(['pid', 'name']):
+        if process.info['name'] == process_name:
+            return True, process.info['pid']
+    return False, None
+
+def kill_process(process_name):
+    running, pid = is_process_running(process_name)
+    if running:
+        process = psutil.Process(pid)
+        process.terminate()
+        print(f"{process_name} (PID {pid}) terminated.")
+    else:
+        print(f"{process_name} is not running.")
+
+def run_ibkr_automation():
+        
+    # Press Windows key + D to hide all desktop apps
+    pyautogui.hotkey('winleft', 'd')
+
+    # Example usage:
+    app_name = "tws.exe"  # Replace with the actual name of your application
+    while is_process_running(app_name)[0]:
+        print(f"{app_name} is running.")
+        kill_process(app_name)
+        print('Killed running IB TWS! Starting new session!')
+        sleep(10)
+        
+            
+    image_path = "ib_shortcut.PNG"
+    pass_box = "ib_password_box.png"
+    usrnm_box = "ib_user_name_box.png"
+    paper_login_btn = "ib_paper_login_btn.png"
+    session_cnflct_continue = "ib_session_cnflct_continue.png"
+    unserstand_continue = "ib_I_understand_continue.png"
+    news_window = "ib_news_window.png"
+    login_window = "ib_login_window"
+    
+    
+    ga = GuiAuto()
+
+    # Replace 'program.exe' with the actual executable or script you want to run
+    program_path = r'C:\Jts\tws.exe'
+    subprocess.Popen([program_path]) 
+    sleep(10)
+    
+    while not is_process_running(app_name)[0]:
+        # Use subprocess to start the program
+        subprocess.Popen([program_path]) 
+        sleep(10) 
+
+    # Check if login window visible
+    print('Waiting to check login window for live trading visible!')
+    ib_login_live_window = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',f'{login_window}_live.PNG')), 0.8)
+    if not ib_login_live_window: 
+        sleep(2)
+        print('Waiting to check login window for simulated trading visible!')
+        ib_login_simulated_window = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',f'{login_window}_simulated.PNG')), 0.8)
+        if not ib_login_simulated_window: 
+            sleep(2)
+            # Detect IB app in the taskbar and click it
+            print('Waiting to click process from task bar!')
+            ib_spot = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',image_path)), 0.8)
+            while not ib_spot:
+                sleep(2)
+            if ib_spot and not( ib_login_live_window or ib_login_simulated_window):
+                ga.click(coords=ib_spot.center() )
+    
+    # Detect and insert the user name
+    print('Proceeding to user name enter phase!')
+    ib_usrnam_box_spot = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',usrnm_box)), 0.6)
+    while not ib_usrnam_box_spot:
+        sleep(2)
+    if ib_usrnam_box_spot:
+        ga.click(coords=ib_usrnam_box_spot.center() )
+        sleep(2)
+        # Type with a delay between key presses
+        pyautogui.typewrite(user_name, interval=0.1)
+
+    # Detect and insert password
+    print('Proceeding to password enter phase!')
+    ib_pass_box_spot = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',pass_box)), 0.6)
+    while not ib_pass_box_spot:
+        sleep(2)
+    if ib_pass_box_spot:
+        ga.click(coords=ib_pass_box_spot.center() )
+        sleep(2)
+        # Type  with a delay between key presses
+        pyautogui.typewrite(password, interval=0.1)
+
+    # Detect and click paperlogin button
+    print('Proceeding to login button click phase!')
+    ib_paper_login_spot = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',paper_login_btn)), 0.8)
+    while not ib_paper_login_spot:
+        sleep(2)
+    if ib_paper_login_spot:
+        ga.click(coords=ib_paper_login_spot.center() )
+        sleep(2) 
+
+    # Detect and click session conflict continue button
+    # Detect and click I understand continue button
+    print('Proceeding to continue if session conflict or paper trading warning found!')
+    sleep(60)
+    ib_session_cnflct_continue_spot = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',session_cnflct_continue)), 0.6)
+    ib_unserstand_continue_spot = ga.detect(cv2.imread(os.path.join(r'.\ib_TW_paper_trade', 'images',unserstand_continue)), 0.6)
+    while not ib_session_cnflct_continue_spot:
+        sleep(2)
+        if  ib_unserstand_continue_spot:
+            break
+
+    if ib_session_cnflct_continue_spot:
+        ga.click(coords=ib_session_cnflct_continue_spot.center() )
+        sleep(2) 
+    if ib_unserstand_continue_spot:
+        # Press the "Enter" key
+        pyautogui.press('enter')
+    
+
+
+if __name__ == '__main__':
+    run_ibkr_automation()
