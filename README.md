@@ -2,7 +2,9 @@
 Perform OCR based web scraping for news headlines using QWEN and developing a RAG architecture with QWQ-Latest for text processing and sentiment analysis to predict stock trends.
 
 Step 1: Automate the login process for IBKR TWS using Python and GUI automation tools like PyAutoGUI and OpenCV. 
+
 Step 2: Capture a screenshot of news headlines from IBKR and then extract text from the image using OCR (Optical Character Recognition) with the QWEN model.
+
 Step 3: Process the screenshots and extract headlines in a structured JSON format."content": [
                         {
                             "type": "text",
