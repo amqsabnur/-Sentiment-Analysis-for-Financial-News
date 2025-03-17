@@ -124,7 +124,47 @@ def run_ibkr_automation():
         # Press the "Enter" key
         pyautogui.press('enter')
     
+def headlines_screenshot():
+    # Replace with your coordinates from step 2.
+    x, y = (30, 210)     # Example top-left corner (adjust as needed)
+    width, height = (1500, 30)  # Adjust based on your window size
 
+    screenshot = pyautogui.screenshot(region=(x, y, width, height))
+    screenshot.save("news_window.png")
+    print('Done!')
+    
+def run_OCR_headlines0():
+    # Load image
+    image = cv2.imread('news_window.png')
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+
+    # Optimized settings for headlines (assuming English)
+    config = '--psm 6 --oem 1 -l eng'  # Single line, LSTM, English
+    text = pytesseract.image_to_string(thresh, config=config)
+
+    print(text)
+
+
+
+
+def run_OCR_headlines():
+    reader = easyocr.Reader(['en'], gpu=False)  # Specify language(s)
+    results = reader.readtext('news_window.png')
+
+    for (bbox, text, prob) in results:
+        print(f"Text: {text}, Confidence: {prob}")
+
+
+if __name__ == '__main__':
+    # print('Maximize if TWS is windowded!')
+    # maximize_TWS_window(app_settings, app_options)
+    
+    print('Taking screenshot of the news headlines!')
+    headlines_screenshot()
+    
+    # print('Running OCR to get the headlines text!')
+    # run_OCR_headlines()
 
 if __name__ == '__main__':
     run_ibkr_automation()
